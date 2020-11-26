@@ -73,7 +73,7 @@ class MpesaController extends Controller
             'PartyA' => '254' . substr($request->phone_number, -9),
             'PartyB' => $this->lmoShortCode,
             'PhoneNumber' => '254' . substr($request->phone_number, -9),
-            'CallBackURL' => 'https://3c3f3d3e0e09.ngrok.io/payments/stk_save',
+            'CallBackURL' => env('BASE_URL') .'/payments/stk_save',
             'AccountReference' => "Joe's Testbed",
             'TransactionDesc' => "Testing stk push on sandbox"
         ];
@@ -149,8 +149,8 @@ class MpesaController extends Controller
         curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode(array(
             'ShortCode' => $this->mainPB,
             'ResponseType' => 'Completed',
-            'ConfirmationURL' => "https://3c3f3d3e0e09.ngrok.io/payments/c2b_confirmation",
-            'ValidationURL' => "https://3c3f3d3e0e09.ngrok.io/payments/c2b_validation"
+            'ConfirmationURL' => env('BASE_URL') ."/payments/c2b_confirmation",
+            'ValidationURL' => env('BASE_URL') ."/payments/c2b_validation"
         )));
         $curl_response = curl_exec($curl);
         echo $curl_response;
@@ -177,8 +177,8 @@ class MpesaController extends Controller
         'PartyA' => $this->mainPB,
         'PartyB' => $this->mainPB,
         'Remarks' => 'Process the Files',
-        'QueueTimeOutURL' => 'https://3c3f3d3e0e09.ngrok.io/payments/b2c_save',
-        'ResultURL' => 'https://3c3f3d3e0e09.ngrok.io/payments/b2c_save',
+        'QueueTimeOutURL' => env('BASE_URL') .'/payments/b2c_save',
+        'ResultURL' => env('BASE_URL') .'/payments/b2c_save',
         'Occasion' => 'NA'
         );
 
