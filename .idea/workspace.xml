@@ -2,13 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="82482563-79b6-4ccb-9334-2b0ed39aacc1" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/app/Logging/SimpleFormatter.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.env.example" beforeDir="false" afterPath="$PROJECT_DIR$/.env.example" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/Http/Controllers/Api/MpesaController.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Http/Controllers/Api/MpesaController.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config/logging.php" beforeDir="false" afterPath="$PROJECT_DIR$/config/logging.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/routes/payments.php" beforeDir="false" afterPath="$PROJECT_DIR$/routes/payments.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/routes/web.php" beforeDir="false" afterPath="$PROJECT_DIR$/routes/web.php" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -144,7 +138,7 @@
     <property name="ASKED_SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="add_unversioned_files" value="$PROJECT_DIR$/.env" />
+    <property name="add_unversioned_files" value="$PROJECT_DIR$/storage/logs/mpesa.log&#10;/home/thekiharani/code/noriatelecom/noriapay/.env" />
     <property name="nodejs_package_manager_path" value="npm" />
     <property name="vue.rearranger.settings.migration" value="true" />
   </component>
@@ -163,7 +157,7 @@
       <option name="presentableId" value="Default" />
       <updated>1606329186538</updated>
       <workItem from="1606329192525" duration="1194000" />
-      <workItem from="1606546521218" duration="642000" />
+      <workItem from="1606546521218" duration="2603000" />
     </task>
     <servers />
   </component>
