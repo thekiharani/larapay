@@ -37,7 +37,7 @@ return [
     'channels' => [
         'stack' => [
             'driver' => 'stack',
-            'channels' => ['single'],
+            'channels' => ['daily'],
             'ignore_exceptions' => false,
         ],
 
@@ -99,6 +99,12 @@ return [
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
         ],
+        'mpesa' => [
+            'driver' => 'single',
+            // 'tap' => [\App\Logging\SimpleFormatter::class],
+            'path' => storage_path('logs/mpesa.log'),
+            'level' => 'debug'
+        ]
     ],
 
 ];

@@ -7,12 +7,14 @@ use App\Models\MpesaC2BTransactions;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Log;
 
 class MpesaController extends Controller
 {
-    //
-    public $apiKey, $apiSecret, $passKey, $lmoShortCode, $myPhoneNumber;
+    // controller constants
+    public $apiKey, $apiSecret, $passKey, $lmoShortCode, $myPhoneNumber, $mainPB, $initiatorName, $initiatorSC;
 
+    // constructor
     public function __construct()
     {
         $this->apiKey = env('MPESA_API_KEY');
@@ -20,8 +22,12 @@ class MpesaController extends Controller
         $this->passKey = env('LMO_PASSKEY');
         $this->lmoShortCode = env('LMO_SHORTCODE');
         $this->myPhoneNumber = env('MY_PHONE_NUMBER');
+        $this->mainPB = env('MAIN_PB');
+        $this->initiatorName = env('INITIATOR_NAME');
+        $this->initiatorSC = env('INITIATOR_SC');
     }
 
+    // MISCELLANEOUS/HELPERS
     // access token
     public function generateAccessToken()
     {
@@ -39,6 +45,7 @@ class MpesaController extends Controller
         return $access_token->access_token;
     }
 
+    // STK PUSH
     // stk push password
     public function LMOPassword()
     {
@@ -46,12 +53,11 @@ class MpesaController extends Controller
         $passkey = $this->passKey;
         $BusinessShortCode = $this->lmoShortCode;
         $timestamp =$lipa_time;
-        $lipa_na_mpesa_password = base64_encode($BusinessShortCode.$passkey.$timestamp);
-        return $lipa_na_mpesa_password;
+        return base64_encode($BusinessShortCode.$passkey.$timestamp);
     }
 
-    // stk push
-    public function customerSTKPush()
+    // initiate stk push
+    public function stkInit(Request $request)
     {
         $url = 'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest';
         $curl = curl_init();
@@ -63,11 +69,11 @@ class MpesaController extends Controller
             'Password' => $this->LMOPassword(),
             'Timestamp' => Carbon::rawParse('now')->format('YmdHms'),
             'TransactionType' => 'CustomerPayBillOnline',
-            'Amount' => 5,
-            'PartyA' => $this->myPhoneNumber,
+            'Amount' => $request->amount,
+            'PartyA' => '254' . substr($request->phone_number, -9),
             'PartyB' => $this->lmoShortCode,
-            'PhoneNumber' => $this->myPhoneNumber,
-            'CallBackURL' => 'https://f58ac71a5955.ngrok.io/payments/stk_save',
+            'PhoneNumber' => '254' . substr($request->phone_number, -9),
+            'CallBackURL' => env('BASE_URL') .'/payments/stk_save',
             'AccountReference' => "Joe's Testbed",
             'TransactionDesc' => "Testing stk push on sandbox"
         ];
@@ -78,6 +84,15 @@ class MpesaController extends Controller
         return curl_exec($curl);
     }
 
+    // save stk push
+    public function stkSave(Request $request)
+    {
+        Log::channel('mpesa')->info($request->getContent());
+        return response()->json(['message' => 'Request Processed...'], 200);
+    }
+
+
+    // C2B
     // validation response
     public function validationResponse($result_code, $result_description)
     {
@@ -99,7 +114,8 @@ class MpesaController extends Controller
     // c2b confirmation
     public function c2bConfirmation(Request $request)
     {
-        $content=json_decode($request->getContent());
+        $content = json_decode($request->getContent());
+        Log::channel('mpesa')->info($request->getContent());
         $mpesa_transaction = new MpesaC2BTransactions();
         $mpesa_transaction->TransactionType = $content->TransactionType;
         $mpesa_transaction->TransID = $content->TransID;
@@ -118,8 +134,71 @@ class MpesaController extends Controller
         // Responding to the confirmation request
         $response = new Response();
         $response->headers->set("Content-Type","text/xml; charset=utf-8");
-        $response->setContent(json_encode(["C2BPaymentConfirmationResult"=>"Success"]));
+        $response->setContent(json_encode(["C2BPaymentConfirmationResult" => "Success"]));
         return $response;
+    }
+
+    // register urls
+    public function c2bRegisterUrls()
+    {
+        $curl = curl_init();
+        curl_setopt($curl, CURLOPT_URL, 'https://sandbox.safaricom.co.ke/mpesa/c2b/v1/registerurl');
+        curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type:application/json','Authorization: Bearer '. $this->generateAccessToken()));
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($curl, CURLOPT_POST, true);
+        curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode(array(
+            'ShortCode' => $this->mainPB,
+            'ResponseType' => 'Completed',
+            'ConfirmationURL' => env('BASE_URL') ."/payments/c2b_confirmation",
+            'ValidationURL' => env('BASE_URL') ."/payments/c2b_validation"
+        )));
+        $curl_response = curl_exec($curl);
+        echo $curl_response;
+    }
+
+    // maybe simulate...?
+
+    // B2C
+    // b2c
+    public function b2cInit()
+    {
+        $url = 'https://sandbox.safaricom.co.ke/mpesa/b2c/v1/paymentrequest';
+
+        $curl = curl_init();
+        curl_setopt($curl, CURLOPT_URL, $url);
+        curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type:application/json','Authorization:Bearer '. $this->generateAccessToken()));
+
+
+        $curl_post_data = array(
+        'InitiatorName' => $this->initiatorName,
+        'SecurityCredential' => $this->initiatorSC,
+        'CommandID' => 'BusinessPayment',
+        'Amount' => '5000',
+        'PartyA' => $this->mainPB,
+        'PartyB' => $this->mainPB,
+        'Remarks' => 'Process the Files',
+        'QueueTimeOutURL' => env('BASE_URL') .'/payments/b2c_save',
+        'ResultURL' => env('BASE_URL') .'/payments/b2c_save',
+        'Occasion' => 'NA'
+        );
+
+        $data_string = json_encode($curl_post_data);
+
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($curl, CURLOPT_POST, true);
+        curl_setopt($curl, CURLOPT_POSTFIELDS, $data_string);
+
+        $curl_response = curl_exec($curl);
+        print_r($curl_response);
+
+        echo $curl_response;
+    }
+
+    // b2c callback
+    public function b2cSave(Request $request)
+    {
+        Log::channel('mpesa')->info($request->getContent());
+        return response()->json(['message' => 'Request Processed...'], 200);
     }
 
 }
